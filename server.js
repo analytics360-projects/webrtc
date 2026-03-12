@@ -1,10 +1,29 @@
 const express = require('express');
 const http = require('http');
+const https = require('https');
+const fs = require('fs');
 const WebSocket = require('ws');
 const path = require('path');
 
 const app = express();
-const server = http.createServer(app);
+
+// SSL: buscar certificados en /opt/webrtc-video-server/ssl/ o ruta personalizada
+const SSL_CERT = process.env.SSL_CERT || path.join(__dirname, 'ssl', 'cert.pem');
+const SSL_KEY = process.env.SSL_KEY || path.join(__dirname, 'ssl', 'key.pem');
+const useSSL = fs.existsSync(SSL_CERT) && fs.existsSync(SSL_KEY);
+
+let server;
+if (useSSL) {
+  server = https.createServer({
+    cert: fs.readFileSync(SSL_CERT),
+    key: fs.readFileSync(SSL_KEY)
+  }, app);
+  console.log('[SSL] Certificados cargados correctamente');
+} else {
+  server = http.createServer(app);
+  console.log('[SSL] Sin certificados, corriendo en HTTP');
+}
+
 const wss = new WebSocket.Server({ server });
 
 // Servir archivos estáticos
@@ -329,8 +348,9 @@ app.get('/api/rooms/:roomId', (req, res) => {
 });
 
 const PORT = process.env.PORT || 9010;
+const protocol = useSSL ? 'https' : 'http';
 server.listen(PORT, () => {
-    console.log(`Servidor WebRTC ejecutándose en http://localhost:${PORT}`);
-    console.log(`- Broadcaster: http://localhost:${PORT}/broadcaster.html`);
-    console.log(`- Viewer: http://localhost:${PORT}/viewer.html?room=ROOM_ID`);
+    console.log(`Servidor WebRTC ejecutándose en ${protocol}://localhost:${PORT}`);
+    console.log(`- Broadcaster: ${protocol}://localhost:${PORT}/broadcaster.html`);
+    console.log(`- Viewer: ${protocol}://localhost:${PORT}/viewer.html?room=ROOM_ID`);
 });
