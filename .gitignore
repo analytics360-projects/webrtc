@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Flutter example
+flutter_example/
+
 # Logs
 *.log
 npm-debug.log*
@@ -18,23 +21,3 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
-
-# Flutter
-flutter_example/.dart_tool/
-flutter_example/.packages
-flutter_example/.pub-cache/
-flutter_example/.pub/
-flutter_example/build/
-flutter_example/.flutter-plugins
-flutter_example/.flutter-plugins-dependencies
-flutter_example/android/.gradle/
-flutter_example/android/local.properties
-flutter_example/android/app/debug/
-flutter_example/android/app/profile/
-flutter_example/android/app/release/
-flutter_example/ios/Pods/
-flutter_example/ios/.symlinks/
-flutter_example/ios/Flutter/Flutter.framework
-flutter_example/ios/Flutter/Flutter.podspec
-flutter_example/ios/Runner.xcworkspace/xcshareddata/
-flutter_example/.pubspec.lock
