@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Transmision - WebRTC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 1.8rem;
+        }
+
+        .back-btn {
+            color: #a0a0a0;
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 1px solid #a0a0a0;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            color: #fff;
+            border-color: #fff;
+        }
+
+        .room-input-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .room-input-section h2 {
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .room-input-wrapper {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .room-input {
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            border: 2px solid #533483;
+            border-radius: 8px;
+            background: #1a1a2e;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            width: 200px;
+            text-align: center;
+        }
+
+        .room-input:focus {
+            outline: none;
+            border-color: #4ade80;
+        }
+
+        .room-input::placeholder {
+            color: #666;
+            letter-spacing: 1px;
+        }
+
+        .current-room {
+            background: linear-gradient(135deg, #533483 0%, #0f3460 100%);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .current-room.visible {
+            display: flex;
+        }
+
+        .current-room span {
+            color: #fff;
+        }
+
+        .room-code {
+            font-family: monospace;
+            font-size: 1.2rem;
+            color: #4ade80;
+            letter-spacing: 2px;
+        }
+
+        .video-container {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 16/9;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge.connecting {
+            background: rgba(255, 193, 7, 0.8);
+            color: #000;
+        }
+
+        .status-badge.connected {
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+        }
+
+        .status-badge.disconnected {
+            background: rgba(158, 158, 158, 0.8);
+            color: white;
+        }
+
+        .status-badge.waiting {
+            background: rgba(33, 150, 243, 0.8);
+            color: white;
+        }
+
+        .status-badge.error {
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: currentColor;
+            border-radius: 50%;
+        }
+
+        .waiting-message {
+            color: #a0a0a0;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .waiting-message.hidden {
+            display: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0f3460 0%, #533483 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(83, 52, 131, 0.4);
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #444;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .info-panel h3 {
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #a0a0a0;
+        }
+
+        .info-value {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .volume-control label {
+            color: #a0a0a0;
+        }
+
+        .volume-control input[type="range"] {
+            width: 150px;
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background 0.3s;
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Ver Transmision</h1>
+            <a href="/" class="back-btn">Volver</a>
+        </header>
+
+        <div id="roomInputSection" class="room-input-section">
+            <h2>Ingresa el codigo de la sala</h2>
+            <div class="room-input-wrapper">
+                <input type="text" id="roomIdInput" class="room-input" placeholder="CODIGO" maxlength="20">
+                <button id="joinBtn" class="btn btn-primary">Unirse</button>
+            </div>
+        </div>
+
+        <div id="currentRoom" class="current-room">
+            <span>Conectado a sala: <span id="currentRoomCode" class="room-code"></span></span>
+            <button id="leaveRoomBtn" class="btn btn-secondary">Cambiar sala</button>
+        </div>
+
+        <div class="video-container" id="videoContainer">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <p id="waitingMessage" class="waiting-message">Ingresa un codigo de sala para ver la transmision</p>
+            <div id="statusBadge" class="status-badge disconnected">
+                <span class="dot"></span>
+                <span id="statusText">Sin sala</span>
+            </div>
+            <button id="fullscreenBtn" class="fullscreen-btn" title="Pantalla completa">&#x26F6;</button>
+        </div>
+
+        <div class="volume-control">
+            <label>Volumen:</label>
+            <input type="range" id="volumeSlider" min="0" max="100" value="100">
+            <span id="volumeValue">100%</span>
+        </div>
+
+        <div class="info-panel">
+            <h3>Informacion de conexion</h3>
+            <div class="info-row">
+                <span class="info-label">Sala:</span>
+                <span id="roomInfo" class="info-value">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Estado:</span>
+                <span id="connectionState" class="info-value">Desconectado</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Calidad:</span>
+                <span id="videoQuality" class="info-value">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Bitrate:</span>
+                <span id="bitrate" class="info-value">-</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const remoteVideo = document.getElementById('remoteVideo');
+        const waitingMessage = document.getElementById('waitingMessage');
+        const statusBadge = document.getElementById('statusBadge');
+        const statusText = document.getElementById('statusText');
+        const connectionState = document.getElementById('connectionState');
+        const videoQuality = document.getElementById('videoQuality');
+        const bitrateEl = document.getElementById('bitrate');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeValue = document.getElementById('volumeValue');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const videoContainer = document.getElementById('videoContainer');
+        const roomIdInput = document.getElementById('roomIdInput');
+        const joinBtn = document.getElementById('joinBtn');
+        const roomInputSection = document.getElementById('roomInputSection');
+        const currentRoom = document.getElementById('currentRoom');
+        const currentRoomCode = document.getElementById('currentRoomCode');
+        const leaveRoomBtn = document.getElementById('leaveRoomBtn');
+        const roomInfoEl = document.getElementById('roomInfo');
+
+        let ws = null;
+        let peerConnection = null;
+        let statsInterval = null;
+        let lastBytesReceived = 0;
+        let currentRoomId = null;
+
+        const config = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+
+        // Verificar si hay room en la URL
+        function checkUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const roomId = params.get('room');
+            if (roomId) {
+                roomIdInput.value = roomId.toUpperCase();
+                joinRoom(roomId.toUpperCase());
+            }
+        }
+
+        function updateStatus(status, text) {
+            statusBadge.className = `status-badge ${status}`;
+            statusText.textContent = text;
+            connectionState.textContent = text;
+        }
+
+        function joinRoom(roomId) {
+            if (!roomId) {
+                alert('Ingresa un codigo de sala');
+                return;
+            }
+
+            currentRoomId = roomId.toUpperCase();
+            connectWebSocket();
+
+            // Actualizar UI
+            roomInputSection.style.display = 'none';
+            currentRoom.classList.add('visible');
+            currentRoomCode.textContent = currentRoomId;
+            roomInfoEl.textContent = currentRoomId;
+            waitingMessage.textContent = 'Conectando a la sala...';
+            waitingMessage.classList.remove('hidden');
+
+            // Actualizar URL sin recargar
+            const newUrl = `${window.location.pathname}?room=${currentRoomId}`;
+            window.history.pushState({}, '', newUrl);
+        }
+
+        function leaveRoom() {
+            disconnect();
+            currentRoomId = null;
+
+            // Actualizar UI
+            roomInputSection.style.display = 'block';
+            currentRoom.classList.remove('visible');
+            roomInfoEl.textContent = '-';
+            waitingMessage.textContent = 'Ingresa un codigo de sala para ver la transmision';
+            waitingMessage.classList.remove('hidden');
+            updateStatus('disconnected', 'Sin sala');
+
+            // Limpiar URL
+            window.history.pushState({}, '', window.location.pathname);
+        }
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+            ws.onopen = () => {
+                console.log('Conectado al servidor de senalizacion');
+                ws.send(JSON.stringify({ type: 'viewer', roomId: currentRoomId }));
+                updateStatus('connecting', 'Conectando...');
+            };
+
+            ws.onmessage = async (event) => {
+                const data = JSON.parse(event.data);
+
+                switch (data.type) {
+                    case 'broadcaster-available':
+                        console.log('Broadcaster disponible');
+                        requestStream();
+                        break;
+
+                    case 'waiting-broadcaster':
+                        console.log('Esperando broadcaster');
+                        updateStatus('waiting', 'Esperando transmisor');
+                        waitingMessage.textContent = 'Esperando que el transmisor inicie...';
+                        break;
+
+                    case 'offer':
+                        console.log('Offer recibido');
+                        await handleOffer(data.sdp);
+                        break;
+
+                    case 'ice-candidate':
+                        if (peerConnection && data.candidate) {
+                            await peerConnection.addIceCandidate(
+                                new RTCIceCandidate(data.candidate)
+                            );
+                        }
+                        break;
+
+                    case 'broadcaster-disconnected':
+                        console.log('Broadcaster desconectado');
+                        updateStatus('waiting', 'Transmisor desconectado');
+                        waitingMessage.textContent = 'El transmisor se ha desconectado. Esperando reconexion...';
+                        waitingMessage.classList.remove('hidden');
+                        if (peerConnection) {
+                            peerConnection.close();
+                            peerConnection = null;
+                        }
+                        break;
+
+                    case 'error':
+                        console.error('Error:', data.message);
+                        updateStatus('error', 'Error');
+                        waitingMessage.textContent = data.message;
+                        break;
+                }
+            };
+
+            ws.onclose = () => {
+                console.log('Desconectado del servidor');
+                if (currentRoomId) {
+                    updateStatus('disconnected', 'Desconectado');
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('Error WebSocket:', error);
+                updateStatus('error', 'Error de conexion');
+            };
+        }
+
+        function requestStream() {
+            console.log('[VIEWER] Solicitando stream al broadcaster...');
+            ws.send(JSON.stringify({ type: 'request-stream' }));
+        }
+
+        async function handleOffer(sdp) {
+            console.log('[VIEWER] ========================================');
+            console.log('[VIEWER] Offer recibido del broadcaster');
+            console.log('[VIEWER] SDP type:', sdp.type);
+            console.log('[VIEWER] SDP length:', sdp.sdp?.length);
+
+            peerConnection = new RTCPeerConnection(config);
+            console.log('[VIEWER] PeerConnection creado');
+
+            peerConnection.ontrack = (event) => {
+                console.log('[VIEWER] *** TRACK RECIBIDO ***');
+                console.log('[VIEWER] Track kind:', event.track.kind);
+                console.log('[VIEWER] Track id:', event.track.id);
+                console.log('[VIEWER] Track enabled:', event.track.enabled);
+                console.log('[VIEWER] Track muted:', event.track.muted);
+                console.log('[VIEWER] Track readyState:', event.track.readyState);
+                console.log('[VIEWER] Streams count:', event.streams.length);
+
+                if (event.streams[0]) {
+                    console.log('[VIEWER] Stream id:', event.streams[0].id);
+                    console.log('[VIEWER] Stream active:', event.streams[0].active);
+                    console.log('[VIEWER] Video tracks in stream:', event.streams[0].getVideoTracks().length);
+                    console.log('[VIEWER] Audio tracks in stream:', event.streams[0].getAudioTracks().length);
+                }
+
+                remoteVideo.srcObject = event.streams[0];
+                console.log('[VIEWER] Stream asignado al video element');
+
+                // Verificar si el video esta reproduciendo
+                remoteVideo.onloadedmetadata = () => {
+                    console.log('[VIEWER] Video metadata cargada');
+                    console.log('[VIEWER] Video width:', remoteVideo.videoWidth);
+                    console.log('[VIEWER] Video height:', remoteVideo.videoHeight);
+                };
+
+                remoteVideo.onplay = () => {
+                    console.log('[VIEWER] Video comenzando a reproducir');
+                };
+
+                waitingMessage.classList.add('hidden');
+                updateStatus('connected', 'Conectado');
+                startStatsMonitoring();
+            };
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    console.log('[VIEWER] ICE candidate generado, enviando...');
+                    ws.send(JSON.stringify({
+                        type: 'ice-candidate',
+                        candidate: event.candidate
+                    }));
+                }
+            };
+
+            peerConnection.oniceconnectionstatechange = () => {
+                console.log('[VIEWER] ICE Connection State:', peerConnection.iceConnectionState);
+            };
+
+            peerConnection.onicegatheringstatechange = () => {
+                console.log('[VIEWER] ICE Gathering State:', peerConnection.iceGatheringState);
+            };
+
+            peerConnection.onconnectionstatechange = () => {
+                console.log('[VIEWER] Connection State:', peerConnection.connectionState);
+                switch (peerConnection.connectionState) {
+                    case 'connecting':
+                        updateStatus('connecting', 'Conectando...');
+                        break;
+                    case 'connected':
+                        updateStatus('connected', 'Conectado');
+                        break;
+                    case 'disconnected':
+                        updateStatus('disconnected', 'Desconectado');
+                        break;
+                    case 'failed':
+                        updateStatus('error', 'Conexion fallida');
+                        break;
+                }
+            };
+
+            console.log('[VIEWER] Estableciendo remote description...');
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+            console.log('[VIEWER] Remote description establecida');
+
+            console.log('[VIEWER] Creando answer...');
+            const answer = await peerConnection.createAnswer();
+            console.log('[VIEWER] Answer creado');
+
+            await peerConnection.setLocalDescription(answer);
+            console.log('[VIEWER] Local description establecida');
+
+            console.log('[VIEWER] Enviando answer al servidor...');
+            ws.send(JSON.stringify({
+                type: 'answer',
+                sdp: peerConnection.localDescription
+            }));
+            console.log('[VIEWER] ========================================');
+        }
+
+        function startStatsMonitoring() {
+            statsInterval = setInterval(async () => {
+                if (!peerConnection) return;
+
+                const stats = await peerConnection.getStats();
+                stats.forEach(report => {
+                    if (report.type === 'inbound-rtp' && report.kind === 'video') {
+                        const bytesReceived = report.bytesReceived;
+                        const bitrate = ((bytesReceived - lastBytesReceived) * 8 / 1000).toFixed(0);
+                        lastBytesReceived = bytesReceived;
+                        bitrateEl.textContent = `${bitrate} kbps`;
+
+                        if (report.frameWidth && report.frameHeight) {
+                            videoQuality.textContent = `${report.frameWidth}x${report.frameHeight}`;
+                        }
+                    }
+                });
+            }, 1000);
+        }
+
+        function disconnect() {
+            if (statsInterval) {
+                clearInterval(statsInterval);
+                statsInterval = null;
+            }
+
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+
+            remoteVideo.srcObject = null;
+            videoQuality.textContent = '-';
+            bitrateEl.textContent = '-';
+            lastBytesReceived = 0;
+        }
+
+        // Event listeners
+        joinBtn.addEventListener('click', () => {
+            joinRoom(roomIdInput.value.trim());
+        });
+
+        roomIdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                joinRoom(roomIdInput.value.trim());
+            }
+        });
+
+        leaveRoomBtn.addEventListener('click', leaveRoom);
+
+        volumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value / 100;
+            remoteVideo.volume = volume;
+            volumeValue.textContent = `${e.target.value}%`;
+        });
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                videoContainer.requestFullscreen();
+            }
+        });
+
+        window.addEventListener('beforeunload', disconnect);
+
+        // Inicializar
+        checkUrlParams();
+    </script>
+</body>
+</html>

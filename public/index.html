@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Video Streaming</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            text-align: center;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+
+        p {
+            color: #a0a0a0;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 20px 40px;
+            font-size: 1.2rem;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-broadcast {
+            background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+        }
+
+        .btn-broadcast:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(233, 69, 96, 0.5);
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, #0f3460 0%, #533483 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(83, 52, 131, 0.4);
+        }
+
+        .btn-view:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(83, 52, 131, 0.5);
+        }
+
+        .icon {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WebRTC Video Streaming</h1>
+        <p>Sistema de transmision de video en vivo</p>
+        <div class="buttons">
+            <a href="/broadcaster.html" class="btn btn-broadcast">
+                <span class="icon">📹</span>
+                Transmitir Video
+            </a>
+            <a href="/viewer.html" class="btn btn-view">
+                <span class="icon">👁️</span>
+                Ver Transmision
+            </a>
+        </div>
+    </div>
+</body>
+</html>
